@@ -33,7 +33,12 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install rust
       if: matrix.os == 'macOS-latest'
-      run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source ~/.cargo/env
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        mv $HOME/.cargo/bin/* /usr/local/bin
+    - name: Update rust
+      if: matrix.os != 'macOS-latest'
+      run: rustup update
     - name: Check rust version
       run: rustc -Vv && cargo -V
     - name: Build
