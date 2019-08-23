@@ -32,14 +32,14 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install rust
+      shell: bash
       run:
-        shell: |
-          if hash rustup 2>/dev/null; then
-            rustup update
-          else
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            mv $HOME/.cargo/bin/* /usr/local/bin
-          fi
+        if hash rustup 2>/dev/null; then
+          rustup update
+        else
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          mv $HOME/.cargo/bin/* /usr/local/bin
+        fi
     - name: Check rust version
       run: rustc -Vv && cargo -V
     - name: Build
