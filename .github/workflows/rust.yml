@@ -33,7 +33,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install rust
       shell: bash
-      run:
+      run: |
         if hash rustup 2>/dev/null; then
           rustup update
         else
