@@ -1,0 +1,50 @@
+name: Release
+
+on: [release]
+
+jobs:
+  release:
+    name: Release binaries for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-musl
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+        - os: macOS-latest
+          target: x86_64-apple-darwin
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install rust
+      shell: bash
+      run: |
+        if hash rustup 2>/dev/null; then
+          rustup update
+        else
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          mv $HOME/.cargo/bin/* /usr/local/bin
+        fi
+
+        rustup target add ${{ matrix.target }}
+    - name: Build
+      run: cargo build --release --all --target ${{ matrix.target }}
+    - name: Upload artifacts
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RELEASE_TAG="${GITHUB_REF#refs/tags/}"
+        EXECUTABLE_PATH="$(find target/release -maxdepth 1 -type f -executable | head -n 1)"
+        EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
+
+        UPLOAD_NAME="$EXECUTABLE_BASENAME-$RELEASE_TAG-${{ matrix.target }}"
+        UPLOAD_URL="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_TAG/assets?name=$UPLOAD_NAME"
+
+        curl -sSL -XPOST \
+          --upload-file "$EXECUTABLE_PATH" \
+          --header "Authorization: token $GITHUB_TOKEN" \
+          --header "Content-Type: application/octet-stream" \
+          "$UPLOAD_URL"
+
