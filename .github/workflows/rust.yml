@@ -13,5 +13,5 @@ jobs:
     - uses: actions/checkout@v1
     - name: Test
       shell: bash
-      run: "echo ${{ matrix.os }}"
+      run: "echo ${{ github.ref }}"
 
