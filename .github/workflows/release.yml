@@ -17,6 +17,10 @@ jobs:
         - os: macOS-latest
           target: x86_64-apple-darwin
     steps:
+    - name: Check GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
     - uses: actions/checkout@v1
     - name: Install rust
       shell: bash
@@ -36,21 +40,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        RELEASE_TAG="${GITHUB_REF#refs/tags/}"
         EXECUTABLE_PATH="$(find target/${{ matrix.target }}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
         EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
+        UPLOAD_NAME="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+        UPLOAD_BASE_URL="$(echo '{{ github.event.release.upload_url }}' | sed 's/{?.*}$//')"
 
-        UPLOAD_NAME="$EXECUTABLE_BASENAME-$RELEASE_TAG-${{ matrix.target }}"
-        UPLOAD_URL="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_TAG/assets?name=$UPLOAD_NAME"
-
-        echo $RELEASE_TAG
-        echo $EXECUTABLE_PATH
-        echo $EXECUTABLE_BASENAME
-        echo $UPLOAD_URL
-
-        curl -sSL -XPOST \
+        curl -fsSL -XPOST \
           --upload-file "$EXECUTABLE_PATH" \
           --header "Authorization: token $GITHUB_TOKEN" \
           --header "Content-Type: application/octet-stream" \
-          "$UPLOAD_URL"
+          "$UPLOAD_BASE_URL?name=$UPLOAD_NAME"
 
