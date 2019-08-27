@@ -46,8 +46,8 @@ jobs:
       run: |
         cd target/${{ matrix.target }}/release
         EXECUTABLE_PATH="$(find . -maxdepth 1 -type f -perm -u+x | head -n 1)"
-        EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
-        OUTPUT_FILE="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+        BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
+        OUTPUT_FILE="$BINARY_NAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
 
         case "${{ matrix.archive }}" in
           zip)
