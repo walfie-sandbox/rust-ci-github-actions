@@ -47,24 +47,24 @@ jobs:
         cd target/${{ matrix.target }}/release
         EXECUTABLE_PATH="$(find . -maxdepth 1 -type f -perm -u+x | head -n 1)"
         EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
+        OUTPUT_FILE="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
 
         case "${{ matrix.archive }}" in
           zip)
-            EXTENSION="zip"
-            7z a -tzip archive $EXECUTABLE_PATH
+            OUTPUT_FILE="$OUTPUT_FILE.zip"
+            7z a -tzip $OUTPUT_FILE $EXECUTABLE_PATH
             ;;
           *)
-            EXTENSION="tar.gz"
-            tar -czvf archive $EXECUTABLE_PATH
+            OUTPUT_FILE="$OUTPUT_FILE.tar.gz"
+            tar -czvf $OUTPUT_FILE $EXECUTABLE_PATH
             ;;
         esac
 
-        UPLOAD_NAME="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}.$EXTENSION"
         UPLOAD_BASE_URL="$(echo '${{ github.event.release.upload_url }}' | sed 's/{?.*}$//')"
 
         curl -fsSL -XPOST \
-          --upload-file archive \
+          --upload-file $OUTPUT_FILE \
           --header "Authorization: token $GITHUB_TOKEN" \
           --header "Content-Type: application/octet-stream" \
-          "$UPLOAD_BASE_URL?name=$UPLOAD_NAME"
+          "$UPLOAD_BASE_URL?name=$OUTPUT_FILE"
 
