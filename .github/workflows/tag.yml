@@ -1,0 +1,30 @@
+name: Tag
+
+on:
+  create:
+    tags: ["*"]
+
+jobs:
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Create release from tag
+      if: github.event.ref_type == 'tag'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RELEASES_URL=$(echo '${{ github.event.repository.releases_url }}' | sed 's/{.*}$//')
+        CHANGELOG=$(git log --pretty=format:'* %h %s' $(git describe --tags --abbrev=0 HEAD^)..HEAD | jq -sR .)
+
+        curl -fsSL -XPOST \
+          --header "Authorization: token $GITHUB_TOKEN" \
+          --header "Content-Type: application/json" \
+          -d "{
+            \"tag_name\": \"${{ github.event.ref }}\",
+            \"name\": \"${{ github.event.ref }}\",
+            \"body\": $CHANGELOG
+          }" $RELEASES_URL
+
