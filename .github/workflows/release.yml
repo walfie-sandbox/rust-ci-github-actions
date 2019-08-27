@@ -44,13 +44,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        EXECUTABLE_PATH="$(find target/${{ matrix.target }}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
+        cd target/${{ matrix.target }}/release
+        EXECUTABLE_PATH="$(find . -maxdepth 1 -type f -perm -u+x | head -n 1)"
         EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
 
         case "${{ matrix.archive }}" in
           zip)
             EXTENSION="zip"
-            zip archive $EXECUTABLE_PATH
+            7z a -tzip archive $EXECUTABLE_PATH
             ;;
           *)
             EXTENSION="tar.gz"
