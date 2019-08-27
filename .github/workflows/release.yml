@@ -12,10 +12,13 @@ jobs:
         include:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-musl
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
+          archive: tar
         - os: macOS-latest
           target: x86_64-apple-darwin
+          archive: tar
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+          archive: zip
     steps:
     - name: Check GitHub context
       env:
@@ -37,16 +40,29 @@ jobs:
       run: cargo build --release --all --target ${{ matrix.target }}
     - name: Upload artifacts
       shell: bash
+      if: github.event.release.action == created
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         EXECUTABLE_PATH="$(find target/${{ matrix.target }}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
         EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
-        UPLOAD_NAME="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+
+        case "${{ matrix.archive }}" in
+          zip)
+            EXTENSION="zip"
+            zip archive $EXECUTABLE_PATH
+            ;;
+          *)
+            EXTENSION="tar.gz"
+            tar -czvf archive $EXECUTABLE_PATH
+            ;;
+        esac
+
+        UPLOAD_NAME="$EXECUTABLE_BASENAME-${{ github.event.release.tag_name }}-${{ matrix.target }}.$EXTENSION"
         UPLOAD_BASE_URL="$(echo '${{ github.event.release.upload_url }}' | sed 's/{?.*}$//')"
 
         curl -fsSL -XPOST \
-          --upload-file "$EXECUTABLE_PATH" \
+          --upload-file archive \
           --header "Authorization: token $GITHUB_TOKEN" \
           --header "Content-Type: application/octet-stream" \
           "$UPLOAD_BASE_URL?name=$UPLOAD_NAME"
