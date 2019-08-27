@@ -4,7 +4,7 @@ on: [release]
 
 jobs:
   release:
-    name: Release binaries for ${{ matrix.target }}
+    name: Release ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -37,7 +37,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         RELEASE_TAG="${GITHUB_REF#refs/tags/}"
-        EXECUTABLE_PATH="$(find target/release -maxdepth 1 -type f -executable | head -n 1)"
+        EXECUTABLE_PATH="$(find target/${{ matrix.target }}/release -maxdepth 1 -type f -executable | head -n 1)"
         EXECUTABLE_BASENAME="$(basename $EXECUTABLE_PATH)"
 
         UPLOAD_NAME="$EXECUTABLE_BASENAME-$RELEASE_TAG-${{ matrix.target }}"
