@@ -40,7 +40,7 @@ jobs:
       run: cargo build --release --all --target ${{ matrix.target }}
     - name: Upload artifacts
       shell: bash
-      if: github.event.release.action == "created"
+      if: github.event.release.action == 'created'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
