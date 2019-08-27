@@ -1,10 +1,40 @@
 name: Release
 
-on: [release]
+on:
+  create:
+    tags: ["*"]
 
 jobs:
-  release:
-    name: Release ${{ matrix.target }}
+  create-github-release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: Create release from tag
+      if: github.event.ref_type == 'tag'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RELEASES_URL=$(echo '${{ github.event.repository.releases_url }}' | sed 's/{.*}$//')
+        CHANGELOG=$(git log --pretty=format:'* %h %s' $(git describe --tags --abbrev=0 HEAD^)..HEAD | jq -sR .)
+
+        curl -fsSL -XPOST \
+          --header "Authorization: token $GITHUB_TOKEN" \
+          --header "Content-Type: application/json" \
+          -d "{
+            \"tag_name\": \"${{ github.event.ref }}\",
+            \"name\": \"${{ github.event.ref }}\",
+            \"body\": $CHANGELOG
+          }" $RELEASES_URL
+
+  upload:
+    name: Upload ${{ matrix.target }}
+    needs: create-github-release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -20,10 +50,6 @@ jobs:
           target: x86_64-pc-windows-msvc
           archive: zip
     steps:
-    - name: Check GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
     - uses: actions/checkout@v1
     - name: Install rust
       shell: bash
@@ -44,10 +70,21 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        RELEASE_URL=$(
+          echo '${{ github.event.repository.releases_url }}' |
+          sed 's|{.*}$|/tags/${{ github.event.ref }}|'
+        )
+
+        UPLOAD_BASE_URL=$(
+          curl -fsSL -H"Authorization: token $GITHUB_TOKEN" $RELEASE_URL |
+          jq -r '.upload_url' |
+          sed 's/{?.*}$//'
+        )
+
         cd target/${{ matrix.target }}/release
         EXECUTABLE_PATH="$(find . -maxdepth 1 -type f -perm -u+x | head -n 1)"
         BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
-        OUTPUT_FILE="$BINARY_NAME-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+        OUTPUT_FILE="$BINARY_NAME-${{ github.event.ref }}-${{ matrix.target }}"
 
         case "${{ matrix.archive }}" in
           zip)
@@ -59,8 +96,6 @@ jobs:
             tar -czvf $OUTPUT_FILE $EXECUTABLE_PATH
             ;;
         esac
-
-        UPLOAD_BASE_URL="$(echo '${{ github.event.release.upload_url }}' | sed 's/{?.*}$//')"
 
         curl -fsSL -XPOST \
           --upload-file $OUTPUT_FILE \
