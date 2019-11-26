@@ -8,8 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Install rustfmt
-      run: rustup component add rustfmt
+    - name: Install rust
+      uses: actions-rs/toolchain@v1.0.3
+      with:
+        toolchain: stable
+        components: rustfmt
+        override: true
     - name: Run rustfmt
       run: cargo fmt --all -- --check
 
@@ -18,10 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Install clippy
-      run: rustup component add clippy
-    - name: Run clippy
-      run: cargo clippy --all
+    - name: Install rust
+      uses: actions-rs/toolchain@v1.0.3
+      with:
+        toolchain: stable
+        components: clippy
+        override: true
+    - uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all --all-features
 
   test:
     name: Test ${{ matrix.os }}
@@ -32,16 +42,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install rust
-      shell: bash
-      run: |
-        if hash rustup 2>/dev/null; then
-          rustup update
-        else
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          mv $HOME/.cargo/bin/* /usr/local/bin
-        fi
-    - name: Check rust version
-      run: rustc -Vv && cargo -V
+      uses: actions-rs/toolchain@v1.0.3
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
     - name: Build
       run: cargo build --all --verbose
     - name: Run tests
