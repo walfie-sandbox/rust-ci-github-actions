@@ -1,7 +1,7 @@
 name: Release
 
 on:
-  create:
+  push:
     tags: ["*"]
 
 jobs:
@@ -52,16 +52,12 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install rust
-      shell: bash
-      run: |
-        if hash rustup 2>/dev/null; then
-          rustup update
-        else
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          mv $HOME/.cargo/bin/* /usr/local/bin
-        fi
-
-        rustup target add ${{ matrix.target }}
+      uses: actions-rs/toolchain@v1.0.3
+      with:
+        profile: minimal
+        toolchain: stable
+        target: ${{ matrix.target }}
+        override: true
     - name: Build
       run: cargo build --release --all --target ${{ matrix.target }}
     - name: Upload artifacts
