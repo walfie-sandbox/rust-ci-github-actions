@@ -12,7 +12,9 @@ jobs:
     - uses: actions/checkout@v1
     - name: Set output
       id: set
-      run: echo -e "::set-output name=my_output::$(git log --pretty=format:'* %h %s' | awk 1 ORS='%0A')"
+      run:
+        CHANGELOG=$(git log --pretty=format:'* %h %s' | awk 1 ORS='%0A')
+        echo -e "::set-output name=my_output::$CHANGELOG"
     - name: Echo output
       run: echo "${{ steps.set.outputs.my_output }}"
 
