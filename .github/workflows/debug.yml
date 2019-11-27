@@ -1,0 +1,18 @@
+name: Debug
+
+on:
+  push:
+    branches: ['*']
+
+jobs:
+  debug:
+    name: debug
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set output
+      id: set
+      run: echo -e "::set-output name=my_output::hello\nsomething\nwith\nnewlines"
+    - name: Echo output
+      run: echo "${{ steps.set.outputs.my_output }}"
+
