@@ -17,7 +17,6 @@ jobs:
         echo -e "::set-output name=changelog::$CHANGELOG"
     - name: Create release
       id: create_release
-      if: github.event.ref_type == 'tag'
       uses: actions/create-release@4d1b607
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
