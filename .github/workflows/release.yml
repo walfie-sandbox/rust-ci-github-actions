@@ -14,16 +14,18 @@ jobs:
       id: changelog
       run: |
         PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+        CURRENT_TAG=$(git describe --tags --abbrev=0 HEAD)
         CHANGELOG=$(git log --pretty=format:'* %h %s' $PREVIOUS_TAG..HEAD | awk 1 ORS='%0A')
         echo -e "::set-output name=changelog::$CHANGELOG"
+        echo -e "::set-output name=tag::$CURRENT_TAG"
     - name: Create release
       id: create_release
       uses: actions/create-release@4d1b607
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.changelog.outputs.tag }}
+        release_name: ${{ steps.changelog.outputs.tag }}
         body: ${{ steps.changelog.outputs.changelog }}
         draft: false
         prerelease: false
@@ -61,9 +63,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        CURRENT_TAG=$(git describe --tags --abbrev=0 HEAD)
         RELEASE_URL=$(
           echo '${{ github.event.repository.releases_url }}' |
-          sed 's|{.*}$|/tags/${{ github.event.ref }}|'
+          sed 's|{.*}$|/tags/$CURRENT_TAG|'
         )
 
         UPLOAD_BASE_URL=$(
@@ -75,7 +78,7 @@ jobs:
         cd target/${{ matrix.target }}/release
         EXECUTABLE_PATH="$(find . -maxdepth 1 -type f -perm -u+x | head -n 1)"
         BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
-        OUTPUT_FILE="$BINARY_NAME-${{ github.event.ref }}-${{ matrix.target }}"
+        OUTPUT_FILE="$BINARY_NAME-$CURRENT_TAG-${{ matrix.target }}"
 
         case "${{ matrix.archive }}" in
           zip)
