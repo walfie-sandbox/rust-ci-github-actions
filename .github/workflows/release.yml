@@ -10,27 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Check GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Create release from tag
+    - name: Generate changelog
+      id: changelog
+      run: |
+        CHANGELOG=$(git log --pretty=format:'* %h %s' | awk 1 ORS='%0A')
+        echo -e "::set-output name=changelog::$CHANGELOG"
+    - name: Create release
+      id: create_release
       if: github.event.ref_type == 'tag'
-      shell: bash
+      uses: actions/create-release@4d1b607
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        RELEASES_URL=$(echo '${{ github.event.repository.releases_url }}' | sed 's/{.*}$//')
-        CHANGELOG=$(git log --pretty=format:'* %h %s' $(git describe --tags --abbrev=0 HEAD^)..HEAD | jq -sR .)
-
-        curl -fsSL -XPOST \
-          --header "Authorization: token $GITHUB_TOKEN" \
-          --header "Content-Type: application/json" \
-          -d "{
-            \"tag_name\": \"${{ github.event.ref }}\",
-            \"name\": \"${{ github.event.ref }}\",
-            \"body\": $CHANGELOG
-          }" $RELEASES_URL
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
 
   upload:
     name: Upload ${{ matrix.target }}
