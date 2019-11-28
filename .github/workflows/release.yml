@@ -13,7 +13,8 @@ jobs:
     - name: Generate changelog
       id: changelog
       run: |
-        CHANGELOG=$(git log --pretty=format:'* %h %s' | awk 1 ORS='%0A')
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+        CHANGELOG=$(git log --pretty=format:'* %h %s' $PREVIOUS_TAG..HEAD | awk 1 ORS='%0A')
         echo -e "::set-output name=changelog::$CHANGELOG"
     - name: Create release
       id: create_release
