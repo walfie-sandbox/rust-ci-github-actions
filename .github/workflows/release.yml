@@ -20,7 +20,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        fetch-depth: 2
+        # Fetch all history
+        fetch-depth: 0
 
     - name: Get the release version from the tag
       shell: bash
