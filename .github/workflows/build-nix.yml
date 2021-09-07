@@ -1,9 +1,9 @@
-name: Test Nix
+name: Build Nix
 on: [pull_request]
 
 jobs:
   test:
-    name: Test Nix
+    name: Build Nix
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -16,6 +16,6 @@ jobs:
     - uses: cachix/cachix-action@v10
       with:
         name: walfie
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
     - run: nix build
 
