@@ -35,5 +35,5 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: release
-        args: --no-confirm
+        args: --no-confirm --execute --no-verify
 
