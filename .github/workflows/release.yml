@@ -3,6 +3,7 @@
 # https://dev.to/eugenebabichenko/automated-multi-platform-releases-with-github-actions-1abg
 # https://github.com/BurntSushi/ripgrep/blob/9b01a8f9ae53ebcd05c27ec21843758c2c1e823f/.github/workflows/release.yml
 
+name: Create GitHub Release
 on:
   push:
     tags:
@@ -16,6 +17,9 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       release_version: ${{ env.RELEASE_VERSION }}
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
     - name: Get the release version from the tag
       shell: bash
       if: env.RELEASE_VERSION == ''
@@ -60,7 +64,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - uses: actions-rs/toolchain@v1
       with:
