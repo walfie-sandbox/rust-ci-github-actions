@@ -20,8 +20,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        # Fetch all history
-        fetch-depth: 0
+        fetch-depth: 0 # Fetch all history
 
     - name: Get the release version from the tag
       shell: bash
@@ -37,9 +36,8 @@ jobs:
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
         git log --reverse \
           --invert-grep --grep="(cargo-release) " \
-          --pretty=format:'* %h %s' \
+          --pretty=tformat:'* %h %s' \
           ${PREVIOUS_TAG:+$PREVIOUS_TAG..}HEAD >> $GITHUB_ENV
-        echo -e "\nEOF" >> $GITHUB_ENV
 
     - name: Create release
       id: create_release
