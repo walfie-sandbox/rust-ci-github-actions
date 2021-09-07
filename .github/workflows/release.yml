@@ -35,8 +35,11 @@ jobs:
       run: |
         PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-        git log --reverse --pretty=format:'* %h %s' ${PREVIOUS_TAG:+$PREVIOUS_TAG..}HEAD >> $GITHUB_ENV
-        printf "\nEOF\n" >> $GITHUB_ENV
+        git log --reverse \
+          --invert-grep --grep="(cargo-release) " \
+          --pretty=format:'* %h %s' \
+          ${PREVIOUS_TAG:+$PREVIOUS_TAG..}HEAD >> $GITHUB_ENV
+        echo -e "\nEOF" >> $GITHUB_ENV
 
     - name: Create release
       id: create_release
@@ -86,17 +89,17 @@ jobs:
       run: |
         EXECUTABLE_PATH="$(find target/${{ matrix.target}}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
         BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
-        staging="$BINARY_NAME-${{ needs.create_release.outputs.release_version }}-${{ matrix.target }}"
+        STAGING="$BINARY_NAME-${{ needs.create_release.outputs.release_version }}-${{ matrix.target }}"
 
-        mkdir -p "$staging"
-        cp "$EXECUTABLE_PATH" "$staging/"
+        mkdir -p "$STAGING"
+        cp "$EXECUTABLE_PATH" "$STAGING/"
 
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a "$staging.zip" "$staging"
-          echo "ASSET=$staging.zip" >> $GITHUB_ENV
+          7z a "$STAGING.zip" "$STAGING"
+          echo "ASSET=$STAGING.zip" >> $GITHUB_ENV
         else
-          tar czf "$staging.tar.gz" "$staging"
-          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+          tar czf "$STAGING.tar.gz" "$STAGING"
+          echo "ASSET=$STAGING.tar.gz" >> $GITHUB_ENV
         fi
 
     - name: Upload release assets
