@@ -28,7 +28,7 @@ jobs:
       if: env.RELEASE_VERSION == ''
       run: |
         echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-        echo "Release version: ${{ env.RELEASE_VERSION }}"
+        echo "Release version: $RELEASE_VERSION"
 
     - name: Generate changelog
       id: changelog
@@ -86,7 +86,7 @@ jobs:
       run: |
         EXECUTABLE_PATH="$(find target/${{ matrix.target}}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
         BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
-        staging="$BINARY_NAME-${{ needs.create-release.outputs.release_version }}-${{ matrix.target }}"
+        staging="$BINARY_NAME-${{ needs.create_release.outputs.release_version }}-${{ matrix.target }}"
 
         mkdir -p "$staging"
         cp "$EXECUTABLE_PATH" "$staging/"
