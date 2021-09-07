@@ -36,8 +36,7 @@ jobs:
         PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
         git log --pretty=format:'* %h %s' ${PREVIOUS_TAG:+$PREVIOUS_TAG..}HEAD >> $GITHUB_ENV
-        echo
-        echo "EOF" >> $GITHUB_ENV
+        echo "\nEOF" >> $GITHUB_ENV
 
     - name: Create release
       id: create_release
