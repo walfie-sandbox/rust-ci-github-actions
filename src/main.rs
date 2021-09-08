@@ -1,4 +1,11 @@
 fn main() {
     println!("Hello, world!");
-    println!("Hello, world! Again");
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn fail() {
+        assert!(false);
+    }
 }

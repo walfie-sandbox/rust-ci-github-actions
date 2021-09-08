@@ -1,9 +1,9 @@
-name: Build Nix
+name: Nix
 on: [pull_request]
 
 jobs:
   test:
-    name: Build Nix
+    name: Build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,4 +18,5 @@ jobs:
         name: walfie
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
     - run: nix build
+    - run: nix flake check
 
