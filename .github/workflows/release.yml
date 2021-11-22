@@ -48,6 +48,7 @@ jobs:
         prerelease: false
 
   upload_assets:
+    name: Upload Release Assets
     strategy:
       matrix:
         os:
@@ -65,8 +66,8 @@ jobs:
     - uses: Swatinem/rust-cache@v1.3.0
     - uses: taiki-e/upload-rust-binary-action@v1
       with:
-        # TODO: Change this
-        bin: example
+        bin: example # TODO: Change this
+        archive: $bin-$tag-$target
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
