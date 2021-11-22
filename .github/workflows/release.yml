@@ -1,8 +1,3 @@
-# Based on:
-# https://eugene-babichenko.github.io/blog/2020/05/09/github-actions-cross-platform-auto-releases/
-# https://dev.to/eugenebabichenko/automated-multi-platform-releases-with-github-actions-1abg
-# https://github.com/BurntSushi/ripgrep/blob/9b01a8f9ae53ebcd05c27ec21843758c2c1e823f/.github/workflows/release.yml
-
 name: Upload Release Assets
 on:
   push:
@@ -51,62 +46,26 @@ jobs:
         draft: false
         prerelease: false
 
-  release_assets:
-    name: Release assets
-    needs: create_release
-    runs-on: ${{ matrix.os }}
+  upload_assets:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-musl
-        - os: macos-latest
-          target: x86_64-apple-darwin
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
-
+        os:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
+    - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: 1.54.0
-        target: ${{ matrix.target }}
+        toolchain: 1.56.1
         override: true
-    - uses: Swatinem/rust-cache@v1.2.0
-    - uses: actions-rs/cargo@v1
+    - uses: Swatinem/rust-cache@v1.3.0
+    - uses: taiki-e/upload-rust-binary-action@v1
       with:
-        command: build
-        args: --release --all --target ${{ matrix.target }}
-
-    - name: Build archive
-      shell: bash
-      run: |
-        EXECUTABLE_PATH="$(find target/${{ matrix.target}}/release -maxdepth 1 -type f -perm -u+x | head -n 1)"
-        BINARY_NAME="$(basename $EXECUTABLE_PATH .exe)"
-        STAGING="$BINARY_NAME-${{ needs.create_release.outputs.release_version }}-${{ matrix.target }}"
-
-        mkdir -p "$STAGING"
-        cp "$EXECUTABLE_PATH" "$STAGING/"
-
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a "$STAGING.zip" "$STAGING"
-          echo "ASSET=$STAGING.zip" >> $GITHUB_ENV
-        else
-          tar czf "$STAGING.tar.gz" "$STAGING"
-          echo "ASSET=$STAGING.tar.gz" >> $GITHUB_ENV
-        fi
-
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
+        # TODO: Change this
+        bin: example
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
-        asset_name: ${{ env.ASSET }}
-        asset_path: ${{ env.ASSET }}
-        asset_content_type: application/octet-stream
 

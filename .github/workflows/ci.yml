@@ -1,7 +1,8 @@
-name: Test
+name: CI
 on: [pull_request]
 
 jobs:
+
   test:
     name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -13,13 +14,19 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: 1.54.0
+        toolchain: 1.56.1
         override: true
-    - uses: Swatinem/rust-cache@v1.2.0
-    - uses: actions-rs/cargo@v1
+    - uses: Swatinem/rust-cache@v1.3.0
+    - name: test --all-features
+      uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all --verbose
+        args: --all-features --verbose
+    - name: test --no-default-features
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features --verbose
     - name: Check for uncommitted changes
       shell: bash
       run: |
@@ -28,17 +35,17 @@ jobs:
         fi
 
   fmt:
-    name: cargo fmt
+    name: Check formatting
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: 1.54.0
+        toolchain: 1.56.1
         override: true
     - run: rustup component add rustfmt
-    - uses: Swatinem/rust-cache@v1.2.0
+    - uses: Swatinem/rust-cache@v1.3.0
     - uses: actions-rs/cargo@v1
       with:
         command: fmt
