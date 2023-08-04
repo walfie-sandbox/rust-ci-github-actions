@@ -1,6 +1,6 @@
 [package]
 name = "example"
-version = "0.1.42-alpha.0"
+version = "0.2.0-alpha.0"
 authors = ["Walfie <walfington@gmail.com>"]
 edition = "2018"
 publish = false
