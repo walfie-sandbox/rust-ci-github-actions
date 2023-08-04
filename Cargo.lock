@@ -4,4 +4,4 @@ version = 3
 
 [[package]]
 name = "example"
-version = "0.1.41"
+version = "0.1.42-alpha.0"
