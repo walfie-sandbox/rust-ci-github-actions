@@ -1,7 +1,5 @@
 # https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 name: Docker
-
-name: Release Docker image
 on:
   push:
     tags:
