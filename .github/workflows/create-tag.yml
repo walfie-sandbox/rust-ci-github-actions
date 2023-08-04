@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     # We can't use the provided `GITHUB_TOKEN` here because it doesn't trigger
-    # other workflows (release.yml). See docs for details:
+    # other workflows (like Docker Release). See docs for details:
     # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token
     #
     # Generate a token (with "repo" permissions), and add it to the repo settings:
@@ -21,21 +21,16 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: 1.56.1
+        toolchain: 1.71.1
         override: true
-    - uses: Swatinem/rust-cache@v1.3.0
-    - name: Install cargo-release
-      uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-release
-        version: 0.18.4
+    - uses: Swatinem/rust-cache@v2
     - name: Set git user
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
     - name: Run cargo-release
-      uses: actions-rs/cargo@v1
-      with:
-        command: release
-        args: --no-confirm --execute --no-verify --dev-version
-
+      run: |
+        cd /tmp
+        curl -L https://github.com/crate-ci/cargo-release/releases/download/v0.18.4/cargo-release-v0.18.4-x86_64-unknown-linux-gnu.tar.gz | tar xvz --strip-components=1
+        cd -
+        /tmp/cargo-release release --no-confirm --execute --no-verify --dev-version
